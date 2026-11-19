@@ -12,6 +12,20 @@ Sources: `DESIGN.md`, `reference/`, the two design chats (Claude, ChatGPT), and 
 
 ---
 
+## D-020 Evaluator details — settled (refines D-010, D-012)
+- **What gets parsed:** every SVG shape element (`path`, `polygon`, `rect`, …), with transforms and the viewBox applied. Curves and arcs are sampled at 16 points per segment.
+- **Repair:** each subpath becomes a polygon, which is repaired with `make_valid`. Pieces with zero area are dropped. A subpath inside another one fills it in (holes removed, D-012).
+- **Boundary distances:** about 1000 evenly spaced points on each aligned boundary, measured to the other shape's boundary.
+  - Hausdorff is the largest of these distances.
+  - HD95 is the 95th percentile of the distances from both directions combined.
+  - After alignment, the unit is √(area).
+- **Check:** `pytest` runs 24 tests. They cover an exact score for a reference against itself, shifts and uniform scaling, and a reference → SVG → parse round trip. They also check that stretches, rotations and convex hulls score lower, and that unusable SVGs are marked invalid.
+
+## D-019 Report a "blob floor" for each country — confirm (new)
+An aligned disc already scores well on compact countries: IoU 0.76 against France and 0.61 against the United States, but 0.11 against Norway. Raw IoU therefore mixes knowledge with how compact the country is. For each country we report the disc's IoU and HD95 as a floor. We also report floor-normalised IoU, (IoU − IoU_disc) / (1 − IoU_disc), next to raw IoU.
+
+Gains per round (ΔIoU) are paired within a country, so the floor does not affect them.
+
 ## D-018 How the scope rule selects reference parts — settled (refines D-006, D-007)
 Each country spec in `configs/countries.yaml` can set:
 
