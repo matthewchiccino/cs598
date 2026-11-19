@@ -28,7 +28,7 @@ countries:
   complexity_score: 0.257
   disc_iou: 0.824
 - name: Saudi Arabia
-  scope: the mainland only (leave out small islands)
+  scope: the main landmass only (leave out small islands)
   familiarity: popular
   shape: simple
   wiki_title: Saudi Arabia
@@ -36,7 +36,7 @@ countries:
   complexity_score: 0.121
   disc_iou: 0.677
 - name: Sri Lanka
-  scope: the mainland only (leave out small islands)
+  scope: the main landmass only (leave out small islands)
   familiarity: popular
   shape: simple
   wiki_title: Sri Lanka
@@ -44,7 +44,7 @@ countries:
   complexity_score: 0.164
   disc_iou: 0.66
 - name: Yemen
-  scope: the mainland only (leave out small islands)
+  scope: the main landmass only (leave out small islands)
   familiarity: popular
   shape: simple
   wiki_title: Yemen
@@ -52,7 +52,7 @@ countries:
   complexity_score: 0.068
   disc_iou: 0.499
 - name: Italy
-  scope: the mainland and its main islands (leave out small islands)
+  scope: the main landmasses only (leave out small islands)
   familiarity: popular
   shape: complex
   wiki_title: Italy
@@ -60,7 +60,7 @@ countries:
   complexity_score: 0.943
   disc_iou: 0.253
 - name: Japan
-  scope: the mainland and its main islands (leave out small islands)
+  scope: the main landmasses only (leave out small islands)
   familiarity: popular
   shape: complex
   wiki_title: Japan
@@ -68,7 +68,7 @@ countries:
   complexity_score: 0.957
   disc_iou: 0.242
 - name: Mexico
-  scope: the mainland only (leave out small islands)
+  scope: the main landmass only (leave out small islands)
   familiarity: popular
   shape: complex
   wiki_title: Mexico
@@ -76,7 +76,7 @@ countries:
   complexity_score: 0.879
   disc_iou: 0.439
 - name: New Zealand
-  scope: the mainland and its main islands (leave out small islands)
+  scope: the main landmasses only (leave out small islands)
   familiarity: popular
   shape: complex
   wiki_title: New Zealand
@@ -84,7 +84,7 @@ countries:
   complexity_score: 0.925
   disc_iou: 0.179
 - name: United Kingdom
-  scope: the mainland and its main islands (leave out small islands)
+  scope: the main landmasses only (leave out small islands)
   familiarity: popular
   shape: complex
   wiki_title: United Kingdom
@@ -92,7 +92,7 @@ countries:
   complexity_score: 0.936
   disc_iou: 0.359
 - name: Vietnam
-  scope: the mainland only (leave out small islands)
+  scope: the main landmass only (leave out small islands)
   familiarity: popular
   shape: complex
   wiki_title: Vietnam
@@ -172,7 +172,7 @@ countries:
   complexity_score: 0.761
   disc_iou: 0.376
 - name: Panama
-  scope: the mainland only (leave out small islands)
+  scope: the main landmass only (leave out small islands)
   familiarity: niche
   shape: complex
   wiki_title: Panama
@@ -188,7 +188,7 @@ countries:
   complexity_score: 0.714
   disc_iou: 0.451
 - name: Tajikistan
-  scope: the mainland only (leave out small islands)
+  scope: the main landmass only (leave out small islands)
   familiarity: niche
   shape: complex
   wiki_title: Tajikistan

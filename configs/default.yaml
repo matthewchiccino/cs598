@@ -4,9 +4,9 @@ run_name: pilot
 
 model:                        # D-015
   name: claude-haiku-5-5      # final runs: claude-sonnet-5-5
-  temperature: 1.0
-  thinking: false
-  max_tokens: 8000
+  thinking: false             # haiku: {type: disabled}; sonnet 5.5: {type: between_tools} (D-022)
+  effort: high                # set explicitly; the default differs by model (D-022)
+  max_tokens: 16000
 
 budget:
   max_usd: 20.0               # placeholder until the team sets the cap (D-015)

@@ -12,6 +12,29 @@ Sources: `DESIGN.md`, `reference/`, the two design chats (Claude, ChatGPT), and 
 
 ---
 
+## D-023 Choosing the model per run, and Opus needs thinking on — confirm (refines D-015, D-022)
+- **`--model`:** `src/run.py --model <id>` overrides `model.name` in the config. The run name defaults to `<run_name>_<model>`, so each model writes its own log. A run started with one model or thinking setting refuses to continue with another.
+- **`--thinking`:** leaves thinking on, which means adaptive thinking (no `thinking` field is sent).
+  - It's **required for `claude-opus-5-5`**, which rejects every way of turning thinking off. Without the flag the runner stops and explains why.
+  - Thinking tokens are billed as output, so Opus runs cost more than the per-call estimates in D-015.
+- **Why it matters:** the initial demo (Matthew's) compared Haiku and Opus. Thinking-on and thinking-off runs are not comparable, because thinking is a form of hidden self-revision.
+  - The main experiment stays thinking-off on Haiku 5.5 (D-015).
+  - A Haiku vs Opus comparison runs **both** models with `--thinking`, and is reported separately as a model-comparison extension.
+- **Prices known to the runner:** Haiku 5.5, Sonnet 5.5 and Opus 5.5. Any other model ID is refused until its price is added to `PRICES` in `src/llm.py`.
+
+## D-022 API request settings and the draw prompt — settled (refines D-015)
+- **No `temperature`:** current models reject sampling parameters (`temperature`, `top_p`, `top_k`), so we send none. Independent samples come from repeated calls (D-015).
+- **Thinking off:** we keep D-015's thinking-off rule, and the request field differs by model:
+  - Haiku 5.5: `{type: "disabled"}`
+  - Sonnet 5.5: `{type: "between_tools"}`. Its `disabled` returns a 400, and with no tools in the request no thinking happens.
+  - Opus 5.5 can't turn thinking off, so `llm.thinking_off` refuses it.
+- **Effort:** set explicitly to `high` (`output_config.effort`). The default differs by model (Haiku `medium`, Sonnet `high`), so leaving it unset would change it silently when we switch models.
+- **`max_tokens`:** 16000, non-streaming.
+- **Prices for the cost log** (USD per million input / output tokens): Haiku 5.5 $0.10 / $0.50, Sonnet 5.5 $2 / $10.
+- **Refusals:** returned as normal rows with `stop_reason: "refusal"`. They count as invalid outputs, and their cost is still logged.
+- **Draw prompt `draw_v1`** (`src/prompts.py`): country name, scope sentence, "Show the country as it appears on a standard north-up web map (Web Mercator projection)", from memory, `viewBox 0 0 100 100`, one `<path>` with a closed subpath per landmass, SVG only. It can change until prompts freeze at step 6. Every row logs `prompt_id` (name + hash) and the full prompt text.
+- **Logging:** the runner writes one row per call after scoring. It adds `prompt`, `response`, `stop_reason` and `request_id` to the planned fields (PLAN.md contracts). Runs resume by skipping calls already logged. A run refuses to continue under a different model.
+
 ## D-021 Country selection rules and the 24 picks — confirm (refines D-009)
 `src/select_countries.py` produces `configs/countries.yaml`. It also writes `data/familiarity/candidates.csv` (every candidate with its measures and the reason for any exclusion) and `analysis/figures/country_selection.png`.
 
@@ -38,8 +61,8 @@ Sources: `DESIGN.md`, `reference/`, the two design chats (Claude, ChatGPT), and 
 
 - **Scope sentence:** chosen automatically:
   - "the whole country" when Natural Earth has one part
-  - "the mainland only (leave out small islands)" when only one part survives the 1% rule
-  - otherwise "the mainland and its main islands (leave out small islands)"
+  - "the main landmass only (leave out small islands)" when only one part survives the 1% rule
+  - otherwise "the main landmasses only (leave out small islands)". This wording replaced "mainland …" in step 5, because Japan, the UK and New Zealand have no mainland.
 
   I checked all 24 references on a contact sheet.
 - USA, France and Norway were not picked. Their hand-written scopes stay in `scope_overrides.yaml`.

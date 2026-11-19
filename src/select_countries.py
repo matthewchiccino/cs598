@@ -213,8 +213,8 @@ def default_scope(row) -> str:
     if row["raw_parts"] == 1:
         return "the whole country"
     if row["parts"] == 1:
-        return "the mainland only (leave out small islands)"
-    return "the mainland and its main islands (leave out small islands)"
+        return "the main landmass only (leave out small islands)"
+    return "the main landmasses only (leave out small islands)"
 
 
 def write_countries(df: pd.DataFrame):

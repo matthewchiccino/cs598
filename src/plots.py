@@ -26,7 +26,57 @@ def _style(ax):
     ax.set_axisbelow(True)
 
 
-LABEL_OFFSETS = [((5, 3), "left"), ((5, -11), "left"), ((-5, 3), "right"), ((-5, -11), "right"),
+def _draw_geom(ax, geom, **kw):
+    from shapely.geometry import MultiPolygon
+    for p in (geom.geoms if isinstance(geom, MultiPolygon) else [geom]):
+        x, y = p.exterior.xy
+        ax.fill(x, y, **kw)
+
+
+def plot_round0_gallery(rows, specs: dict, path) -> Path:
+    """One row per country: the reference, then each sample's drawing over the reference outline.
+
+    Shapes are aligned the way they are scored (centroid at origin, area 1), so overlap reads as IoU.
+    """
+    from geometry import align, svg_to_geometry
+    from groundtruth import load_reference
+
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    countries = list(dict.fromkeys(r["country"] for r in rows))
+    n_samples = max(r["sample"] for r in rows) + 1
+    fig, axes = plt.subplots(len(countries), n_samples + 1, figsize=(2.4 * (n_samples + 1), 2.4 * len(countries)),
+                             dpi=110, squeeze=False)
+    fig.patch.set_facecolor(SURFACE)
+    for i, name in enumerate(countries):
+        ref = align(load_reference(specs[name]))
+        ax = axes[i, 0]
+        _draw_geom(ax, ref, facecolor="#d9d8d3", edgecolor=TEXT, linewidth=0.8)
+        ax.set_title(f"{name}\nreference", fontsize=8, color=TEXT)
+        for s in range(n_samples):
+            ax = axes[i, s + 1]
+            row = next((r for r in rows if r["country"] == name and r["sample"] == s), None)
+            if row is None:
+                ax.set_title("not run", fontsize=8, color=TEXT_MUTED)
+                continue
+            geom = svg_to_geometry(row["svg"]) if row["svg"] else None
+            if geom is not None:
+                _draw_geom(ax, align(geom), facecolor=SELECTED, alpha=0.45, edgecolor=SELECTED, linewidth=0.8)
+            _draw_geom(ax, ref, facecolor="none", edgecolor=TEXT, linewidth=0.8)
+            label = f"IoU {row['iou']:.2f}  HD95 {row['hd95']:.2f}" if row["valid"] else "invalid output"
+            ax.set_title(f"sample {s}\n{label}", fontsize=8, color=TEXT)
+    for ax in axes.flat:
+        ax.set_aspect("equal")
+        ax.axis("off")
+    fig.suptitle("Round 0 drawings (blue) over the reference outline (black), aligned as scored",
+                 fontsize=10, color=TEXT, x=0.01, ha="left")
+    fig.tight_layout()
+    fig.savefig(path, facecolor=SURFACE)
+    plt.close(fig)
+    return path
+
+
+LABEL_OFFSETS =[((5, 3), "left"), ((5, -11), "left"), ((-5, 3), "right"), ((-5, -11), "right"),
                  ((5, 12), "left"), ((-5, 12), "right")]
 
 
