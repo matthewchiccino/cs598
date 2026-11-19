@@ -12,7 +12,7 @@ Decisions live in [DECISIONS.md](DECISIONS.md) (D-xxx below).
 | # | Step | Verify by | Target | Status |
 |---|------|-----------|--------|--------|
 | 0 | Settle the decisions; write this plan | Read DECISIONS.md | Nov 19 | done |
-| 1 | Environment: `requirements.txt`, `.venv`, `configs/default.yaml` skeleton | `python -c "import shapely, svgelements, shapefile, anthropic"` | Nov 20 | todo |
+| 1 | Environment: `requirements.txt`, `.venv`, `configs/default.yaml` skeleton | `python -c "import shapely, svgelements, shapefile, anthropic"` | Nov 20 | done |
 | 2 | Ground truth: Natural Earth 1:50m, loader, Web Mercator, scope rule, name map (D-005–007) | Script prints parts and area, and writes reference PNGs for USA, France and Norway | Nov 20 | todo |
 | 3 | Evaluator: SVG → geometry, alignment, IoU / Hausdorff / HD95 (D-010–012) | Unit tests: self = 1.0; shifted or scaled = 1.0; perturbed < 1; garbage SVG = invalid | Nov 21 | todo |
 | 4 | Country selection: pageviews × complexity → 24 countries (D-009) | `configs/countries.yaml`, plus a 2×2 scatter plot | Nov 22 | todo |

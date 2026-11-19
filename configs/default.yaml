@@ -1,0 +1,34 @@
+# Experiment config. Decision IDs refer to docs/DECISIONS.md.
+
+run_name: pilot
+
+model:                        # D-015
+  name: claude-haiku-5-5      # final runs: claude-sonnet-5-5
+  temperature: 1.0
+  thinking: false
+  max_tokens: 8000
+
+budget:
+  max_usd: 20.0               # placeholder until the team sets the cap (D-015)
+
+experiment:
+  conditions: [C0, C1, C2, C3, C5]   # D-002
+  rounds: 3                          # revisions after round 0 (D-003)
+  samples: 3                         # independent samples per country x condition
+  judge: true                        # D-008
+
+countries_file: configs/countries.yaml   # written in step 4 (D-009)
+
+ground_truth:                 # D-005, D-006
+  shapefile: data/ground_truth/ne_50m/ne_50m_admin_0_countries.shp
+  projection: web_mercator
+
+render:                       # D-013
+  size_px: 512
+  fill: "#9ab6d6"
+  stroke: "#1f2d3d"
+
+metrics:                      # D-010
+  boundary_samples: 1000      # points per boundary for Hausdorff / HD95
+
+runs_dir: runs
