@@ -12,6 +12,26 @@ Sources: `DESIGN.md`, `reference/`, the two design chats (Claude, ChatGPT), and 
 
 ---
 
+## D-018 How the scope rule selects reference parts — settled (refines D-006, D-007)
+Each country spec in `configs/countries.yaml` can set:
+
+- **`bbox`** (`[lon_min, lat_min, lon_max, lat_max]`): parts whose representative point lies inside are kept.
+- **`min_part_frac`** (default 0.01): after projection, parts smaller than this share of the kept area are dropped.
+
+The `scope` sentence in the prompt must describe the same parts. Countries that cross 180° have their western parts shifted by +360° before projection.
+
+Checked on the three seed countries:
+
+| Country | Parts in NE | Kept |
+|---------|-------------|------|
+| United States | 127 | 1 (the lower 48) |
+| France | 10 | 2 (mainland, Corsica) |
+| Norway | 32 | 2 (mainland, one large northern island) |
+
+Name lookup tries ADMIN, then NAME, NAME_LONG, NAME_EN and FORMAL_EN. That resolves 193 of the 195 names in `draw_test.py`. "Cote d'Ivoire" and "Sao Tome and Principe" need `ne_name` (NE spells them with accents or as "Ivory Coast").
+
+Known limitation: admin-0 polygons follow political borders through lakes. The US reference therefore has no Great Lakes indentation, while a drawing may show one. We keep the political outline and note it in the write-up.
+
 ## D-017 Paper format — open
 The course grades the presentation and a ZIP (code plus results, optional README). The research-paper report is our own addition. It is written Dec 2–13 from results already presented. The format (Overleaf LaTeX or Markdown to PDF) is not decided. It does not block anything before Dec 1.
 

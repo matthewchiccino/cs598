@@ -1,0 +1,22 @@
+# Country specs (D-007, D-009). Step 4 fills in the full 24-country list.
+#
+# name:          name used in the prompt
+# ne_name:       Natural Earth ADMIN name, when it differs from name
+# scope:         sentence added to the prompt; describes the same parts the reference keeps
+# bbox:          [lon_min, lat_min, lon_max, lat_max]; the reference keeps parts whose
+#                representative point lies inside
+# min_part_frac: drop parts smaller than this share of the kept area (default 0.01)
+
+countries:
+  - name: United States
+    ne_name: United States of America
+    scope: the contiguous United States (the lower 48 states only, no Alaska or Hawaii)
+    bbox: [-125, 24, -66, 50]
+
+  - name: France
+    scope: metropolitan France including Corsica (no overseas territories)
+    bbox: [-5.5, 41, 10, 51.5]
+
+  - name: Norway
+    scope: mainland Norway (no Svalbard or Jan Mayen)
+    bbox: [4, 57, 32, 72]
