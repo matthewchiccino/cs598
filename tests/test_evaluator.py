@@ -4,7 +4,7 @@ from shapely import affinity
 from shapely.geometry import Point, Polygon, box
 
 from geometry import align, extract_svg, geometry_to_svg, svg_to_geometry
-from groundtruth import load_countries, load_reference
+from groundtruth import load_reference
 from metrics import score
 
 
@@ -18,10 +18,12 @@ TRIANGLE_UP = Polygon([(0, 0), (10, 0), (0, 10)])
 TRIANGLE_SVG = svg("M0 100 L100 100 L0 0 Z")
 
 
+FRANCE = {"name": "France", "bbox": [-5.5, 41, 10, 51.5]}
+
+
 @pytest.fixture(scope="module")
 def france():
-    spec = next(c for c in load_countries() if c["name"] == "France")
-    return load_reference(spec)
+    return load_reference(FRANCE)
 
 
 # --- parsing -----------------------------------------------------------------------

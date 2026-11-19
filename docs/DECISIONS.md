@@ -12,6 +12,38 @@ Sources: `DESIGN.md`, `reference/`, the two design chats (Claude, ChatGPT), and 
 
 ---
 
+## D-021 Country selection rules and the 24 picks — confirm (refines D-009)
+`src/select_countries.py` produces `configs/countries.yaml`. It also writes `data/familiarity/candidates.csv` (every candidate with its measures and the reason for any exclusion) and `analysis/figures/country_selection.png`.
+
+- **Candidates:** the 195 names in `draw_test.py`. 55 are excluded, leaving 140:
+  - 34 microstates (< 10,000 km², equal-area)
+  - 14 with a disputed border that changes the outline. Natural Earth draws de facto lines (for example India's Kashmir), and a model may draw the claimed one. The list is `DISPUTED` in the script.
+  - 5 archipelagos (> 5 parts kept)
+  - 2 with a distant territory (> 1,000 km from the main part) and no hand-written scope. Hand-written scopes live in `configs/scope_overrides.yaml`.
+- **Familiarity:** English Wikipedia pageviews over the **last 60 days** (Sep 20 – Nov 18, 2026, 59 days with data). Redirects are followed and disambiguation pages are rejected. The range is 89k (Togo) to 2.35M.
+  - This **differs from D-009's 12 months.** The 12-month endpoint answered HTTP 429 (retry after 29 s) after two requests, which would make the fetch take over an hour. The MediaWiki API returns 60 days for 50 articles per request.
+  - Limitation: a 60-day window picks up news spikes (Yemen and Saudi Arabia may be "popular" partly for that reason).
+- **Complexity:** computed on the aligned reference, simplified at 0.01 √area so it doesn't depend on size. It is the mean percentile of two measures:
+  - **roughness:** perimeter ÷ convex-hull perimeter − 1. This doesn't penalise elongated shapes, unlike 1 − isoperimetric quotient, which made Portugal look rough.
+  - **concavity:** 1 − area ÷ hull area.
+- **Cells:** median splits on both axes. In each cell, the 6 countries furthest from both medians are picked: the score is the smaller of the two distances, ranked from largest down.
+- **Picks:**
+
+| Cell | Countries |
+|------|-----------|
+| popular / simple | Poland, Saudi Arabia, Yemen, Albania, Sri Lanka, Ethiopia |
+| popular / complex | United Kingdom, Japan, New Zealand, Mexico, Italy, Vietnam |
+| niche / simple | Libya, Botswana, Lesotho, Niger, Burundi, Chad |
+| niche / complex | Mozambique, Tajikistan, Costa Rica, Panama, Gambia, Republic of the Congo |
+
+- **Scope sentence:** chosen automatically:
+  - "the whole country" when Natural Earth has one part
+  - "the mainland only (leave out small islands)" when only one part survives the 1% rule
+  - otherwise "the mainland and its main islands (leave out small islands)"
+
+  I checked all 24 references on a contact sheet.
+- USA, France and Norway were not picked. Their hand-written scopes stay in `scope_overrides.yaml`.
+
 ## D-020 Evaluator details — settled (refines D-010, D-012)
 - **What gets parsed:** every SVG shape element (`path`, `polygon`, `rect`, …), with transforms and the viewBox applied. Curves and arcs are sampled at 16 points per segment.
 - **Repair:** each subpath becomes a polygon, which is repaired with `make_valid`. Pieces with zero area are dropped. A subpath inside another one fills it in (holes removed, D-012).

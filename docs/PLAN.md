@@ -15,7 +15,7 @@ Decisions live in [DECISIONS.md](DECISIONS.md) (D-xxx below).
 | 1 | Environment: `requirements.txt`, `.venv`, `configs/default.yaml` skeleton | `python -c "import shapely, svgelements, shapefile, anthropic"` | Nov 20 | done |
 | 2 | Ground truth: Natural Earth 1:50m, loader, Web Mercator, scope rule, name map (D-005–007) | Script prints parts and area, and writes reference PNGs for USA, France and Norway | Nov 20 | done |
 | 3 | Evaluator: SVG → geometry, alignment, IoU / Hausdorff / HD95 (D-010–012) | Unit tests: self = 1.0; shifted or scaled = 1.0; perturbed < 1; garbage SVG = invalid | Nov 21 | done |
-| 4 | Country selection: pageviews × complexity → 24 countries (D-009) | `configs/countries.yaml`, plus a 2×2 scatter plot | Nov 22 | todo |
+| 4 | Country selection: pageviews × complexity → 24 countries (D-009) | `configs/countries.yaml`, plus a 2×2 scatter plot | Nov 22 | done |
 | 5 | LLM wrapper, JSONL log, budget cap, C0 pilot on 5 countries | JSONL rows, scores, and a gallery PNG of round 0 next to the reference | Nov 23 | todo |
 | 6 | C1, C2, C3, C5 and the judge; pilot on 5 countries; **freeze prompts** (D-002, D-003, D-008) | Per-round IoU table for the pilot; prompts tagged in git | Nov 24 | todo |
 | 7 | Full run: 24 countries × 3 samples × all conditions on the final model | Run finishes under the budget cap; validity rate reported | Nov 25–27 | todo |
