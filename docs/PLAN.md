@@ -17,7 +17,7 @@ Decisions live in [DECISIONS.md](DECISIONS.md) (D-xxx below).
 | 3 | Evaluator: SVG → geometry, alignment, IoU / Hausdorff / HD95 (D-010–012) | Unit tests: self = 1.0; shifted or scaled = 1.0; perturbed < 1; garbage SVG = invalid | Nov 21 | done |
 | 4 | Country selection: pageviews × complexity → 24 countries (D-009) | `configs/countries.yaml`, plus a 2×2 scatter plot | Nov 22 | done |
 | 5 | LLM wrapper, JSONL log, budget cap, C0 pilot on 5 countries | JSONL rows, scores, and a gallery PNG of round 0 next to the reference | Nov 23 | code done, tested with a fake client; pilot waits for an API key |
-| 6 | C1, C2, C3, C5 and the judge; pilot on 5 countries; **freeze prompts** (D-002, D-003, D-008) | Per-round IoU table for the pilot; prompts tagged in git | Nov 24 | 6a done (prompts, image input, D-024); 6b done (revision rounds, D-025); 6c done (judge and C3, D-026), 6d runner and table, 6e pilot and freeze (needs the key) |
+| 6 | C1, C2, C3, C5 and the judge; pilot on 5 countries; **freeze prompts** (D-002, D-003, D-008) | Per-round IoU table for the pilot; prompts tagged in git | Nov 24 | 6a done (prompts, image input, D-024); 6b done (revision rounds, D-025); 6c done (judge and C3, D-026); 6d done (runner and table, D-027); 6e pilot and freeze (needs the key) |
 | 7 | Full run: 24 countries × 3 samples × all conditions on the final model | Run finishes under the budget cap; validity rate reported | Nov 25–27 | todo |
 | 8 | Analysis: figures for RQ1–RQ4 and the gallery | `analysis/` regenerates every figure from the JSONL | Nov 27–29 | todo |
 | 9 | Slides, plus a live demo script (one country, rounds 0–3, scores revealed at the end) | Dry run under 8 min | Nov 29–30 | todo |
@@ -25,7 +25,7 @@ Decisions live in [DECISIONS.md](DECISIONS.md) (D-xxx below).
 
 **Cut line:** if step 6 isn't done by Nov 25, drop C2 and run 16 countries. C0, C1, C3 and C5 alone still answer RQ1 and RQ4.
 
-**Rough call count for step 7:** 24 countries × 3 samples × 13 drawing calls (1 shared + 3 each for C1, C2, C3, C5) ≈ 940. The judge adds a similar number of shorter calls. The pilot in step 5 measures tokens before we commit.
+**Call count for step 7:** 24 countries × 3 samples × 26 calls per trial = 1,872 at most (`python src/run.py --dry-run`). That is about $1.90 on Haiku 5.5 with guessed tokens (D-027); the pilot measures real tokens before we commit.
 
 ## Contracts (settle before step 5)
 
@@ -51,7 +51,8 @@ conditions.py   round0(llm, budget, country, sample, ref, run, run_dir) -> Row
                 draw(..., condition="C3", round_=r) -> Row                       # C3 resample
                 judge(llm, budget, country, drawing, previous, run, run_dir, render_cfg) -> Row | None
                 select_best(drawings, judges) -> {judge_round, judge_iou, oracle_round, oracle_iou}
-run.py          CLI: config in, JSONL out, resumable, --dry-run
+run.py          CLI: config in, JSONL out, resumable, --dry-run, --conditions
+results.py      round_table(rows, rounds), validity_table(rows, rounds); CLI --run <name>
 ```
 
 ### One JSONL row per API call (`runs/<run_id>/calls.jsonl`)

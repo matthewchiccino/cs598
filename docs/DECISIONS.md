@@ -12,6 +12,24 @@ Sources: `DESIGN.md`, `reference/`, the two design chats (Claude, ChatGPT), and 
 
 ---
 
+## D-027 Runner order, cost estimate and the per-round table — settled (refines D-022, D-026)
+- **Order within a trial (country × sample):**
+  1. the round-0 drawing and its judge call;
+  2. for each revision condition in turn (C1, C2, C5), rounds 1–3 as revise then judge;
+  3. C3 rounds 1–3 as draw then judge.
+
+  Trials run country by country. Every call is keyed by (condition, country, sample, round, call_type) and skipped if already logged. A budget stop mid-trial therefore resumes at the next missing call.
+- **`--conditions`** picks a subset; round 0 always runs. The config default is all of C0, C1, C2, C3 and C5.
+- **Dry run:** prints the number of calls still to make and an estimated cost. The count is an upper bound, since invalid drawings skip their judge call.
+  - Tokens per call type come from the run's own log once it has rows. Until then they come from guesses in `run.GUESS_TOKENS`: draw 250 in / 3000 out, revise 4000 / 3200, judge 900 / 80.
+  - Full experiment: 1,872 calls, about $1.90 on Haiku 5.5 with the guessed tokens. The pilot replaces the guesses.
+- **Per-round table** (`src/results.py`, also printed at the end of every run):
+  - Mean IoU per condition and round, with an invalid drawing counted as 0, plus the share of valid drawings.
+  - Round 0 is the shared C0 drawing in every row.
+  - C3 appears twice per round k: the judge's pick among rounds 0..k, and the best by IoU among them.
+
+Why: a fixed order with per-call keys makes runs reproducible and safe to stop. Counting invalid drawings as 0 keeps a model that stops producing SVG from looking better.
+
 ## D-026 Judge calls and C3 selection — confirm (refines D-002, D-008)
 - **One judge call per valid drawing,** using the same model. The judge row repeats the drawing's condition, sample and round, with `call_type: "judge"`. It fills `judge_rating` and `judge_verdict` and leaves the score fields null. The round-0 drawing is rated once, under C0.
 - **Invalid drawings get no judge call,** since there is nothing to render. Analysis treats them as unrated.
