@@ -123,8 +123,9 @@ def judge_message(country: dict, png: Path, previous_png: Path | None = None) ->
 
 
 def parse_critique(text: str) -> str | None:
-    m = re.search(r"<critique>(.*?)</critique>", text or "", re.S | re.I)
-    return m.group(1).strip() if m else None
+    """Text inside <critique> tags. An unclosed tag runs up to the SVG, or to the end of the reply."""
+    m = re.search(r"<critique>(.*?)(?:</critique>|<svg\b|$)", text or "", re.S | re.I)
+    return (m.group(1).strip() or None) if m else None
 
 
 def parse_judge(text: str) -> tuple[int | None, str | None]:

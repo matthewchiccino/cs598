@@ -12,6 +12,16 @@ Sources: `DESIGN.md`, `reference/`, the two design chats (Claude, ChatGPT), and 
 
 ---
 
+## D-028 Pilot result, critique parsing, and the prompt freeze — settled (refines D-024)
+- **Pilot (Nov 20):** Haiku 5.5, 5 countries × 2 samples, all conditions. It made 260 calls for $0.064. All 260 stopped normally (`end_turn`), with no refusals and no invalid drawings. The log is `runs/pilot_claude-haiku-5-5/`.
+- **Parsing fix:** in 11 of 90 revisions the model opened `<critique>` and never closed it before the SVG. Those critiques were logged as null, and the next rounds said "(no critique given)". In 1 reply the SVG sat inside the tags, so the logged critique contained the SVG code.
+  - `parse_critique` now reads up to `</critique>`, the start of the SVG, or the end of the reply, whichever comes first.
+  - On the pilot replies it recovers all 90 critiques and leaves the other 78 unchanged.
+  - The prompt text is unchanged. The pilot log is kept as it ran.
+- **Frozen prompts** (tag `prompts-v1`): `draw_v1:be1788da`, `revise_v1_C1:9b428766`, `revise_v1_C2:a2bf7061`, `revise_v1_C5:56572ab6`, `judge_v1:fc419ab3`. Any change from here means a new id and a rerun (D-003).
+
+Why: the parser change only recovers text the model already wrote, so freezing the prompts doesn't need a second pilot.
+
 ## D-027 Runner order, cost estimate and the per-round table — settled (refines D-022, D-026)
 - **Order within a trial (country × sample):**
   1. the round-0 drawing and its judge call;

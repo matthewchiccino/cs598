@@ -83,6 +83,14 @@ def test_judge_message(png, tmp_path):
 def test_parse_critique():
     assert parse_critique("<critique>\n- too wide\n</critique>\n<svg/>") == "- too wide"
     assert parse_critique("<svg/>") is None
+    assert parse_critique("<critique></critique><svg/>") is None
+
+
+def test_parse_unclosed_critique():
+    # the pilot's failure mode: the tag is never closed before the SVG
+    assert parse_critique("<critique>\n- too wide\n- coast too flat\n\n<svg viewBox='0 0 100 100'/>") == \
+        "- too wide\n- coast too flat"
+    assert parse_critique("<critique>- too wide") == "- too wide"
 
 
 @pytest.mark.parametrize("text,expected", [
