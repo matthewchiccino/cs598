@@ -12,6 +12,14 @@ Sources: `DESIGN.md`, `reference/`, the two design chats (Claude, ChatGPT), and 
 
 ---
 
+## D-025 Revision state comes from the log — settled (refines D-003)
+- **`conditions.revise`** makes one call. Its input is the trial's logged rows so far: the shared C0 round 0, then that condition's earlier revisions. Resuming mid-trial therefore needs nothing beyond `calls.jsonl`. It refuses rows from another trial, a wrong condition or a gap in the rounds.
+- **"Current drawing" means the latest one,** even if it scored worse. The model is never shown its best earlier drawing; choosing among drawings is what C3 measures.
+- **After an invalid round,** the next round gets the no-drawing message (D-024). It does not fall back to the last valid drawing, and C5 shows no score that round. The critiques, including the one from the invalid round, still carry forward.
+- **PNGs** go to `runs/<run>/png/<country>__<condition>__s<sample>__r<round>.png`, rendered once. C1 and C5 share the round-0 image.
+
+Why: the log is the single source of truth, so a crash or budget stop loses nothing. Showing the latest drawing is what "self-correct" means in D-001.
+
 ## D-024 Revise and judge prompts — confirm (refines D-002, D-003, D-008, D-013)
 - **Revise prompt `revise_v1_<condition>`** (`src/prompts.py`). Each round repeats the round-0 task sentence, shows the current drawing in the condition's form, and lists earlier critiques oldest first. It then asks for a critique of at most 5 bullets in `<critique>` tags, followed by the complete revised SVG with the same requirements as `draw_v1`.
 - **Keeping a drawing is allowed:** "If you find nothing worth fixing, say so in the critique and repeat the same SVG." A prompt that forces a change every round would build in drift and blur the RQ1 answer.
