@@ -17,7 +17,7 @@ Decisions live in [DECISIONS.md](DECISIONS.md) (D-xxx below).
 | 3 | Evaluator: SVG → geometry, alignment, IoU / Hausdorff / HD95 (D-010–012) | Unit tests: self = 1.0; shifted or scaled = 1.0; perturbed < 1; garbage SVG = invalid | Nov 21 | done |
 | 4 | Country selection: pageviews × complexity → 24 countries (D-009) | `configs/countries.yaml`, plus a 2×2 scatter plot | Nov 22 | done |
 | 5 | LLM wrapper, JSONL log, budget cap, C0 pilot on 5 countries | JSONL rows, scores, and a gallery PNG of round 0 next to the reference | Nov 23 | code done, tested with a fake client; pilot waits for an API key |
-| 6 | C1, C2, C3, C5 and the judge; pilot on 5 countries; **freeze prompts** (D-002, D-003, D-008) | Per-round IoU table for the pilot; prompts tagged in git | Nov 24 | todo |
+| 6 | C1, C2, C3, C5 and the judge; pilot on 5 countries; **freeze prompts** (D-002, D-003, D-008) | Per-round IoU table for the pilot; prompts tagged in git | Nov 24 | 6a done (prompts, image input, D-024); 6b revision loop, 6c judge and C3, 6d runner and table, 6e pilot and freeze (needs the key) |
 | 7 | Full run: 24 countries × 3 samples × all conditions on the final model | Run finishes under the budget cap; validity rate reported | Nov 25–27 | todo |
 | 8 | Analysis: figures for RQ1–RQ4 and the gallery | `analysis/` regenerates every figure from the JSONL | Nov 27–29 | todo |
 | 9 | Slides, plus a live demo script (one country, rounds 0–3, scores revealed at the end) | Dry run under 8 min | Nov 29–30 | todo |
@@ -40,6 +40,11 @@ render.py       to_png(g: Geometry, path) -> Path                    # what the 
 llm.py          LLM(model_cfg).call(content, *, budget) -> Reply     # text, stop_reason, tokens, cost_usd
                 RunLog(path).append(row) / .rows() / .spent()        # the runner writes the row after scoring
 prompts.py      draw_prompt(country) -> (prompt_id, text)
+                revise_message(cond, country, svg, png, critiques, iou, prev_iou) -> (prompt_id, parts)
+                judge_message(country, png, previous_png=None) -> (prompt_id, parts)
+                parse_critique(text), parse_judge(text) -> (rating, verdict)
+                # parts: list of str (text) and Path (PNG); llm.to_content builds the content blocks
+render.py       drawing_png(g, path, render_cfg) -> Path                # what C1/C5 and the judge see
 conditions.py   round0(llm, budget, country, sample, ref, run, run_dir) -> Row   # step 6 adds the others
 run.py          CLI: config in, JSONL out, resumable, --dry-run
 ```

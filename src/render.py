@@ -58,3 +58,8 @@ def to_png(geom, path, *, bounds=None, size_px: int = 512, fill: str = DEFAULT_F
     fig.savefig(path, dpi=dpi, facecolor="white")
     plt.close(fig)
     return path
+
+
+def drawing_png(geom, path, render_cfg: dict) -> Path:
+    """The PNG the model and the judge see of a drawing: the scored geometry, framed to its own bounds."""
+    return to_png(geom, path, size_px=render_cfg["size_px"], fill=render_cfg["fill"], stroke=render_cfg["stroke"])

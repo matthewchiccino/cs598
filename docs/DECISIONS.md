@@ -12,6 +12,21 @@ Sources: `DESIGN.md`, `reference/`, the two design chats (Claude, ChatGPT), and 
 
 ---
 
+## D-024 Revise and judge prompts — confirm (refines D-002, D-003, D-008, D-013)
+- **Revise prompt `revise_v1_<condition>`** (`src/prompts.py`). Each round repeats the round-0 task sentence, shows the current drawing in the condition's form, and lists earlier critiques oldest first. It then asks for a critique of at most 5 bullets in `<critique>` tags, followed by the complete revised SVG with the same requirements as `draw_v1`.
+- **Keeping a drawing is allowed:** "If you find nothing worth fixing, say so in the critique and repeat the same SVG." A prompt that forces a change every round would build in drift and blur the RQ1 answer.
+- **What each condition sees:**
+  - C1: the PNG (placed before the text) and the SVG code.
+  - C2: the SVG code only.
+  - C5: the same as C1, plus "IoU 0.62 (previous drawing: 0.50)" and one sentence defining IoU, including that position and size are factored out (D-011).
+- **Invalid current drawing:** the model gets "Your previous reply did not contain an SVG that could be drawn", with no image, code or score, and the round still runs.
+- **Render the model sees:** the scored geometry (D-013), framed to its own bounds (`render.drawing_png`, 512 px, config colours). The frame is not the SVG viewBox, because a reply's `width`/`height` attributes can rescale its coordinates.
+- **Judge prompt `judge_v1`:** a fresh context with renders only, never the SVG or a score. It has the country name, the scope sentence, "only the shape matters; position and size do not", and a 1–10 scale with anchors at 1–2, 3–4, 5–6, 7–8 and 9–10. The reply is `<reason>` (one sentence) and `<rating>`. From round 1 the judge also sees the previous drawing, labelled and placed first, and adds `<verdict>` better / worse / same.
+- **Parsing:** a missing critique is logged as null and shown in later rounds as "(no critique given)". A judge rating outside 1–10, or a verdict outside the three words, is logged as null.
+- **Preview:** `python src/preview_prompts.py --country <name>` prints every message, with stand-in drawings and real scores, without calling the API.
+
+Why: one shared frame keeps the conditions differing only in the feedback block. The anchored scale and fixed tags make judge replies parseable and comparable across conditions.
+
 ## D-023 Choosing the model per run, and Opus needs thinking on — confirm (refines D-015, D-022)
 - **`--model`:** `src/run.py --model <id>` overrides `model.name` in the config. The run name defaults to `<run_name>_<model>`, so each model writes its own log. A run started with one model or thinking setting refuses to continue with another.
 - **`--thinking`:** leaves thinking on, which means adaptive thinking (no `thinking` field is sent).

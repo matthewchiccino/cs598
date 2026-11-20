@@ -2,6 +2,7 @@
 
 The runner writes one JSONL row per call through RunLog, so spend survives restarts.
 """
+import base64
 import json
 from dataclasses import dataclass
 from pathlib import Path
@@ -65,6 +66,26 @@ class Budget:
         self.spent += usd
 
 
+def image_block(png: Path) -> dict:
+    data = base64.standard_b64encode(Path(png).read_bytes()).decode()
+    return {"type": "image", "source": {"type": "base64", "media_type": "image/png", "data": data}}
+
+
+def to_content(parts):
+    """A string as is; a list of parts as content blocks: str -> text, Path -> PNG image, dict as given."""
+    if isinstance(parts, str):
+        return parts
+    blocks = []
+    for p in parts:
+        if isinstance(p, Path):
+            blocks.append(image_block(p))
+        elif isinstance(p, str):
+            blocks.append({"type": "text", "text": p})
+        else:
+            blocks.append(p)
+    return blocks
+
+
 @dataclass
 class Reply:
     text: str
@@ -88,7 +109,7 @@ class LLM:
 
     def request_kwargs(self, content) -> dict:
         kw = {"model": self.model, "max_tokens": self.max_tokens,
-              "messages": [{"role": "user", "content": content}]}
+              "messages": [{"role": "user", "content": to_content(content)}]}
         if self.effort:
             kw["output_config"] = {"effort": self.effort}
         if not self.thinking:
@@ -96,7 +117,7 @@ class LLM:
         return kw
 
     def call(self, content, *, budget: Budget) -> Reply:
-        """One user turn (text or a list of content blocks). Raises BudgetExceeded before spending.
+        """One user turn (a string, or parts for to_content). Raises BudgetExceeded before spending.
 
         A refusal comes back as a normal Reply with stop_reason "refusal", so its cost is still logged.
         """
