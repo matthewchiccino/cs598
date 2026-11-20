@@ -1,11 +1,13 @@
-"""Experiment conditions (D-002): round 0 (C0), revision rounds for C1, C2 and C5; step 6c adds C3 and the judge."""
+"""Experiment conditions (D-002): round 0 (C0), revision rounds for C1, C2 and C5, independent resamples
+for C3, and the judge that rates every drawing (D-008)."""
 import re
 import time
 from pathlib import Path
 
 from geometry import extract_svg, svg_to_geometry
 from metrics import score
-from prompts import draw_prompt, parse_critique, prompt_text, revise_message
+from prompts import (draw_prompt, judge_message, parse_critique, parse_judge, prompt_text,
+                     revise_message)
 from render import drawing_png
 
 REVISED = ("C1", "C2", "C5")
@@ -25,6 +27,16 @@ def file_stem(row: dict) -> str:
     return f"{slug(row['country'])}__{row['condition']}__s{row['sample']}__r{row['round']}"
 
 
+def reply_row(row: dict, reply, prompt_id: str, prompt: str) -> dict:
+    """A call row with the reply filled in and every per-call-type field empty."""
+    return {**row, "prompt_id": prompt_id, "prompt": prompt, "response": reply.text,
+            "stop_reason": reply.stop_reason, "svg": None, "critique": None,
+            "judge_rating": None, "judge_verdict": None,
+            "valid": None, "iou": None, "hausdorff": None, "hd95": None,
+            "input_tokens": reply.input_tokens, "output_tokens": reply.output_tokens,
+            "cost_usd": reply.cost_usd, "request_id": reply.request_id}
+
+
 def scored_row(row: dict, reply, prompt_id: str, prompt: str, ref, svg_dir: Path) -> dict:
     """Fill in the reply, the extracted SVG and its scores; save the SVG for viewing."""
     svg = extract_svg(reply.text)
@@ -32,19 +44,21 @@ def scored_row(row: dict, reply, prompt_id: str, prompt: str, ref, svg_dir: Path
     if svg:
         svg_dir.mkdir(parents=True, exist_ok=True)
         (svg_dir / f"{file_stem(row)}.svg").write_text(svg, encoding="utf-8")
-    return {**row, "prompt_id": prompt_id, "prompt": prompt, "response": reply.text,
-            "stop_reason": reply.stop_reason, "svg": svg, "critique": None,
-            "judge_rating": None, "judge_verdict": None, **s,
-            "input_tokens": reply.input_tokens, "output_tokens": reply.output_tokens,
-            "cost_usd": reply.cost_usd, "request_id": reply.request_id}
+    return {**reply_row(row, reply, prompt_id, prompt), "svg": svg, **s}
+
+
+def draw(llm, budget, country: dict, sample: int, ref, run: str, run_dir: Path,
+         condition: str = "C0", round_: int = 0) -> dict:
+    """One drawing from the country name and scope: C0 round 0, or a C3 resample in rounds 1-3."""
+    pid, prompt = draw_prompt(country)
+    reply = llm.call(prompt, budget=budget)
+    row = base_row(run, llm, condition, country["name"], sample, round_, "draw")
+    return scored_row(row, reply, pid, prompt, ref, run_dir / "svg")
 
 
 def round0(llm, budget, country: dict, sample: int, ref, run: str, run_dir: Path) -> dict:
     """C0: draw once from the country name and scope."""
-    pid, prompt = draw_prompt(country)
-    reply = llm.call(prompt, budget=budget)
-    row = base_row(run, llm, "C0", country["name"], sample, 0, "draw")
-    return scored_row(row, reply, pid, prompt, ref, run_dir / "svg")
+    return draw(llm, budget, country, sample, ref, run, run_dir)
 
 
 def drawing_image(row: dict, run_dir: Path, render_cfg: dict) -> Path | None:
@@ -89,3 +103,42 @@ def revise(llm, budget, condition: str, country: dict, sample: int, ref, history
     row = scored_row(row, reply, pid, prompt_text(parts), ref, run_dir / "svg")
     row["critique"] = parse_critique(reply.text)
     return row
+
+
+def judge(llm, budget, country: dict, drawing: dict, previous: dict | None, run: str, run_dir: Path,
+          render_cfg: dict) -> dict | None:
+    """Rate one drawing in a fresh context (D-008); None when the drawing is invalid (nothing to show).
+
+    previous: the drawing one round earlier in the same revision trial (C1, C2, C5 from round 1), for
+    the better/worse/same verdict; None for round 0 and for C3 resamples, or if it was invalid.
+    The judge row carries the drawing's condition, sample and round, with call_type "judge".
+    """
+    if previous is not None and drawing["condition"] not in REVISED:
+        raise ValueError(f"{drawing['condition']} drawings are rated without a previous drawing")
+    png = drawing_image(drawing, run_dir, render_cfg)
+    if png is None:
+        return None
+    previous_png = drawing_image(previous, run_dir, render_cfg) if previous is not None else None
+    pid, parts = judge_message(country, png, previous_png)
+    reply = llm.call(parts, budget=budget)
+    row = base_row(run, llm, drawing["condition"], drawing["country"], drawing["sample"], drawing["round"], "judge")
+    rating, verdict = parse_judge(reply.text)
+    return {**reply_row(row, reply, pid, prompt_text(parts)), "judge_rating": rating, "judge_verdict": verdict}
+
+
+def select_best(drawings: list[dict], judges: list[dict]) -> dict:
+    """C3 selection among one trial's drawings (C0 round 0 plus the C3 resamples so far).
+
+    Judge pick: the highest judge rating, earliest round on ties. Drawings with no rating (invalid, or an
+    unreadable judge reply) are not candidates; with no rated drawing the pick is round 0.
+    Oracle: the highest IoU, earliest round on ties; an upper bound no deployed system could reach.
+    """
+    if len({(d["country"], d["sample"]) for d in drawings + judges}) > 1:
+        raise ValueError("select_best takes the rows of one trial")
+    by_round = sorted(drawings, key=lambda d: d["round"])
+    rating = {j["round"]: j["judge_rating"] for j in judges if j["judge_rating"] is not None}
+    rated = [d for d in by_round if d["round"] in rating]
+    pick = max(rated, key=lambda d: rating[d["round"]]) if rated else by_round[0]
+    oracle = max(by_round, key=lambda d: d["iou"])
+    return {"judge_round": pick["round"], "judge_iou": pick["iou"],
+            "oracle_round": oracle["round"], "oracle_iou": oracle["iou"]}

@@ -12,6 +12,19 @@ Sources: `DESIGN.md`, `reference/`, the two design chats (Claude, ChatGPT), and 
 
 ---
 
+## D-026 Judge calls and C3 selection — confirm (refines D-002, D-008)
+- **One judge call per valid drawing,** using the same model. The judge row repeats the drawing's condition, sample and round, with `call_type: "judge"`. It fills `judge_rating` and `judge_verdict` and leaves the score fields null. The round-0 drawing is rated once, under C0.
+- **Invalid drawings get no judge call,** since there is nothing to render. Analysis treats them as unrated.
+- **Better / worse / same** is asked only in revision trials (C1, C2, C5) from round 1, against the drawing one round earlier. If that drawing was invalid, the call asks for the rating alone.
+- **C3 resamples are rated alone.** Independent samples have no "previous" to compare with.
+- **C3 resamples** use the round-0 draw prompt unchanged, logged as condition C3, rounds 1–3, `call_type: "draw"`.
+- **C3 selection** (`conditions.select_best`) runs over round 0 plus the resamples up to a given round:
+  - **Judge pick:** the highest rating; ties go to the earliest round. Unrated drawings are not candidates. If nothing was rated, the pick is round 0, which is what the model returns with no selection.
+  - **Oracle:** the highest IoU, ties to the earliest round. It is reported as an upper bound only.
+  - C3's value "at round k" is the pick among rounds 0..k. That gives the curve that is compute-matched with the revision conditions.
+
+Why: rating only what can be shown keeps the judge on equal footing in every condition. Ties going to the earliest round favour the cheaper answer and make the pick deterministic.
+
 ## D-025 Revision state comes from the log — settled (refines D-003)
 - **`conditions.revise`** makes one call. Its input is the trial's logged rows so far: the shared C0 round 0, then that condition's earlier revisions. Resuming mid-trial therefore needs nothing beyond `calls.jsonl`. It refuses rows from another trial, a wrong condition or a gap in the rounds.
 - **"Current drawing" means the latest one,** even if it scored worse. The model is never shown its best earlier drawing; choosing among drawings is what C3 measures.
