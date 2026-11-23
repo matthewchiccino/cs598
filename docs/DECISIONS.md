@@ -12,6 +12,17 @@ Sources: `DESIGN.md`, `reference/`, the two design chats (Claude, ChatGPT), and 
 
 ---
 
+## D-029 Analysis: intervals, paired gains and judge scoring — confirm (refines D-010, D-019)
+- **Script:** `python src/analysis.py --run <run>` reads `runs/<run>/calls.jsonl` and writes every figure and table to `analysis/<run>/`. Nothing is computed by hand, so a rerun regenerates the report numbers.
+- **Unit of analysis is the country.** The 3 samples of a country are averaged first, then a bootstrap resamples the 24 countries (2,000 resamples, fixed seed) for 95% intervals. Samples of one country share its difficulty, so treating 72 trials as independent would make the intervals too narrow.
+- **Gains are paired within a trial:** each curve's IoU at round k minus the shared round-0 IoU of the same trial. RQ1 and RQ2 use paired differences of those gains: C1 − C3 (judge pick), C2 − C3 (judge pick), C1 − C2, and C5 − C1.
+- **The per-round chart plots gains, not levels.** Countries differ far more than conditions do, so intervals on mean IoU span the whole chart and hide the effect. Level curves are still drawn, without intervals.
+- **RQ3:** per cell, the one-shot floor-normalised IoU (D-019) and the gain at round 3 for each condition. With 6 countries per cell these intervals are wide; the write-up reports them as descriptive.
+- **RQ4:** Spearman between rating and IoU, pooled and averaged within country. The within-country value is the stricter test, because the pooled value rises just from the judge telling easy countries from hard ones. Verdict accuracy compares better / worse / same with the true IoU change, where a change under **0.02** counts as "same".
+- **Spearman** is computed as Pearson on average ranks, which avoids adding scipy.
+
+Why: the country-level bootstrap and paired gains match how the experiment varies. The 0.02 tolerance is a placeholder, not measured. It should be checked against how much IoU moves when C1 repeats the same SVG ("unchanged" in `regressions.csv`) and against the pilot. Changing it only rescores the verdicts (`SAME_TOL` in `src/analysis.py`).
+
 ## D-028 Pilot result, critique parsing, and the prompt freeze — settled (refines D-024)
 - **Pilot (Nov 20):** Haiku 5.5, 5 countries × 2 samples, all conditions. It made 260 calls for $0.064. All 260 stopped normally (`end_turn`), with no refusals and no invalid drawings. The log is `runs/pilot_claude-haiku-5-5/`.
 - **Parsing fix:** in 11 of 90 revisions the model opened `<critique>` and never closed it before the SVG. Those critiques were logged as null, and the next rounds said "(no critique given)". In 1 reply the SVG sat inside the tags, so the logged critique contained the SVG code.

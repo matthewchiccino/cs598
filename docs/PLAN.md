@@ -19,7 +19,7 @@ Decisions live in [DECISIONS.md](DECISIONS.md) (D-xxx below).
 | 5 | LLM wrapper, JSONL log, budget cap, C0 pilot on 5 countries | JSONL rows, scores, and a gallery PNG of round 0 next to the reference | Nov 23 | done: real pilot ran in step 6e (`runs/pilot_claude-haiku-5-5`) |
 | 6 | C1, C2, C3, C5 and the judge; pilot on 5 countries; **freeze prompts** (D-002, D-003, D-008) | Per-round IoU table for the pilot; prompts tagged in git | Nov 24 | 6a done (prompts, image input, D-024); 6b done (revision rounds, D-025); 6c done (judge and C3, D-026); 6d done (runner and table, D-027); 6e pilot ran Nov 20 (5 countries × 2 samples, 260 calls, $0.064, no invalid drawings); critique parser fixed and prompts frozen as `prompts-v1` (D-028). **Done.** |
 | 7 | Full run: 24 countries × 3 samples × all conditions on the final model | Run finishes under the budget cap; validity rate reported | Nov 25–27 | todo |
-| 8 | Analysis: figures for RQ1–RQ4 and the gallery | `analysis/` regenerates every figure from the JSONL | Nov 27–29 | todo |
+| 8 | Analysis: figures for RQ1–RQ4 and the gallery | `analysis/` regenerates every figure from the JSONL | Nov 27–29 | code done Nov 23 (`src/analysis.py`, D-029; tested on a synthetic log only). Run it on the step-7 log. |
 | 9 | Slides, plus a live demo script (one country, rounds 0–3, scores revealed at the end) | Dry run under 8 min | Nov 29–30 | todo |
 | 10 | After Dec 1: paper, ZIP, labelled extensions (C4 memory, lat/lon format, second model) | ZIP contents match the slides | Dec 2–13 | todo |
 
