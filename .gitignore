@@ -1,11 +1,19 @@
 .env
 runs/*
 !runs/.gitkeep
-# Main runs share their call log and config (D-030); drawings and images regenerate from the log.
+# Main runs and the two pilots share their call log and config (D-031); drawings and images regenerate from the log.
 !runs/main_*/
 runs/main_*/*
 !runs/main_*/calls.jsonl
 !runs/main_*/config.json
+!runs/pilot_claude-haiku-5-5/
+!runs/pilot_sonnet/
+runs/pilot_claude-haiku-5-5/*
+runs/pilot_sonnet/*
+!runs/pilot_claude-haiku-5-5/calls.jsonl
+!runs/pilot_claude-haiku-5-5/config.json
+!runs/pilot_sonnet/calls.jsonl
+!runs/pilot_sonnet/config.json
 __pycache__/
 .venv/
 .DS_Store

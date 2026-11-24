@@ -12,6 +12,23 @@ Sources: `DESIGN.md`, `reference/`, the two design chats (Claude, ChatGPT), and 
 
 ---
 
+## D-033 Main Sonnet run: results and how thinking shapes them — settled (refines D-031, D-032)
+- **Run (Nov 24, 13:15–17:02):** `runs/main_claude-sonnet-5-5/`. 24 countries × 3 samples, all conditions. It made 1,869 calls for $18.78, under the $20 cap. 1,866 stopped normally (`end_turn`). 3 C2 revisions hit `max_tokens` (16,000) and are invalid; thinking used up their budget. Their judge calls were skipped. 646 of 648 critiques and all 933 judge ratings parsed.
+- **Headline (gain at round 3 over round 0, 95% CI over countries):**
+  - **The revision conditions do not improve the drawing.** Image + code: −0.088 [−0.137, −0.044]. Code only: −0.078 [−0.155, −0.011]. Image + code + IoU score: −0.012 [−0.035, +0.010].
+  - **Fresh resampling does improve it.** Judge pick: +0.054 [+0.018, +0.095]. Best by IoU: +0.078.
+  - **The judge is useful here:** Spearman 0.47 pooled, 0.43 within country, and verdicts are right 58% of the time.
+- **Thinking explains much of this (D-032):**
+  - **Where it happens:** 39% of round-0 drawings and about half of the C3 resamples thought. 15–19% of code-only revisions did. Revisions that saw the image (C1, C5) and judge calls never did.
+  - **It is decided mostly by country.** 8 countries thought on every fresh drawing (Italy, Costa Rica, Poland, Niger, Mozambique, Mexico, Libya, Japan); 8 never did.
+  - **Its effect is large:** fresh drawings with thinking score 0.872, against 0.584 without, and +0.256 within country.
+  - **Split by round 0:**
+    - In the 44 trials whose first drawing did not think, revisions stay roughly flat (round 3: image + code 0.561, code only 0.612, with score 0.581, from 0.581). The judge pick still rises to 0.666.
+    - In the 28 trials whose first drawing thought (0.880), revisions fall to 0.685 / 0.630 / 0.849. They lose a drawing made with thinking and redraw without it.
+- **Reporting:** state every gain together with the thinking split. Rows have `thinking_tokens`, so the split is exact.
+
+Why: the round-0 confound found in the pilot turned out to be the main driver. Reporting the split turns it from a flaw into a finding: image input seems to switch hidden thinking off, and revising without thinking undoes the gains thinking made.
+
 ## D-032 Sonnet 5.5 thinks even with `between_tools`; we keep it and log thinking tokens — settled (refines D-022, D-031)
 - **Finding (Sonnet pilot, Nov 24):** `pilot_sonnet` (3 countries × 1 sample, 78 calls, $0.84) sent `thinking: {type: "between_tools"}` at effort `high`, which the API reference describes as "no extended thinking". A diagnostic repeat of Poland's round-0 call returned an empty `thinking` block, and `usage.output_tokens_details.thinking_tokens` was 3,406 of 3,898 output tokens.
 - **Size:** 9 of 39 Sonnet drawing calls have under 1 reply character per output token, mostly round-0 and C3 draws of Poland and Japan. That signature means hidden thinking. Haiku 5.5 (`disabled`) shows none in 130 calls.
@@ -39,6 +56,7 @@ Sources: `DESIGN.md`, `reference/`, the two design chats (Claude, ChatGPT), and 
 - **Before the full run:** a Sonnet pilot (`--run pilot_sonnet`, 2–5 countries × 1 sample). It checks that `between_tools` keeps thinking off on the real API, measures Sonnet's tokens for the cost estimate, and checks that its replies parse.
 - **Cost:** at the Haiku pilot's token counts, Sonnet is about $9 and Haiku about $0.50 for the full run. The $20 cap stays.
 - **Shared data:** each main run's `calls.jsonl` and `config.json` are tracked in git (`.gitignore` exception). SVGs, PNGs and the gallery stay local because they regenerate from the log. Pilots stay local.
+  - **Pilots too (Nov 24):** `runs/pilot_claude-haiku-5-5/` and `runs/pilot_sonnet/` share their `calls.jsonl` and `config.json` as well, because the slide notes quote pilot numbers. Smoke tests, previews and console logs stay local.
 
 Why: Haiku's round-0 drawings fell below the disc floor for 4 of 5 pilot countries, so a stronger model makes the test of self-correction fairer. Running Haiku as well costs little and adds a model-size comparison.
 

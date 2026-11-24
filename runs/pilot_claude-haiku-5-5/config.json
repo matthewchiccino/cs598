@@ -1,0 +1,38 @@
+{
+  "run_name": "pilot",
+  "model": {
+    "name": "claude-haiku-5-5",
+    "thinking": false,
+    "effort": "high",
+    "max_tokens": 16000
+  },
+  "budget": {
+    "max_usd": 20.0
+  },
+  "experiment": {
+    "conditions": [
+      "C0",
+      "C1",
+      "C2",
+      "C3",
+      "C5"
+    ],
+    "rounds": 3,
+    "samples": 3,
+    "judge": true
+  },
+  "countries_file": "configs/countries.yaml",
+  "ground_truth": {
+    "shapefile": "data/ground_truth/ne_50m/ne_50m_admin_0_countries.shp",
+    "projection": "web_mercator"
+  },
+  "render": {
+    "size_px": 512,
+    "fill": "#9ab6d6",
+    "stroke": "#1f2d3d"
+  },
+  "metrics": {
+    "boundary_samples": 1000
+  },
+  "runs_dir": "runs"
+}
