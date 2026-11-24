@@ -38,7 +38,6 @@ class RunLog:
 
     def __init__(self, path: Path):
         self.path = Path(path)
-        self.path.parent.mkdir(parents=True, exist_ok=True)
 
     def rows(self) -> list[dict]:
         if not self.path.exists():
@@ -46,6 +45,7 @@ class RunLog:
         return [json.loads(line) for line in self.path.read_text(encoding="utf-8").splitlines() if line]
 
     def append(self, row: dict):
+        self.path.parent.mkdir(parents=True, exist_ok=True)
         with self.path.open("a", encoding="utf-8") as f:
             f.write(json.dumps(row, ensure_ascii=False) + "\n")
 

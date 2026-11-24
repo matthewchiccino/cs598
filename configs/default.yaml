@@ -1,6 +1,6 @@
 # Experiment config. Decision IDs refer to docs/DECISIONS.md.
 
-run_name: pilot
+run_name: main                 # runs/<run_name>_<model>, analysis/<run_name>_<model> (D-030)
 
 model:                        # D-015
   name: claude-haiku-5-5      # final runs: claude-sonnet-5-5

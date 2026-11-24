@@ -118,8 +118,8 @@ def test_model_option_overrides_config(cfg_file, tmp_path):
     fake = FakeClient()
     run_module.main(["--config", str(path), "--model", "claude-sonnet-5-5", "--countries", "Poland", "--samples", "1",
                      "--conditions", "C0"], client=fake)
-    run_dir = tmp_path / "runs" / "pilot_claude-sonnet-5-5"  # default run name is <run_name>_<model>
-    row = read_log(tmp_path, "pilot_claude-sonnet-5-5")[0]
+    run_dir = tmp_path / "runs" / "main_claude-sonnet-5-5"  # default run name is <run_name>_<model>
+    row = read_log(tmp_path, "main_claude-sonnet-5-5")[0]
     assert row["model"] == "claude-sonnet-5-5"
     assert fake.requests[0]["model"] == "claude-sonnet-5-5"
     assert fake.requests[0]["thinking"] == {"type": "between_tools"}
@@ -135,7 +135,7 @@ def test_opus_needs_thinking_flag(cfg_file, tmp_path):
     fake = FakeClient()
     run_module.main(base + ["--thinking"], client=fake)
     assert "thinking" not in fake.requests[0]  # omitted = adaptive thinking
-    row = read_log(tmp_path, "pilot_claude-opus-5-5")[0]
+    row = read_log(tmp_path, "main_claude-opus-5-5")[0]
     assert row["cost_usd"] == pytest.approx(cost_usd("claude-opus-5-5", 200, 3000))
 
 
@@ -204,4 +204,4 @@ def test_dry_run_counts_calls_and_estimates_cost(cfg_file, tmp_path, capsys):
     out = capsys.readouterr().out
     assert f"{2 * FULL_TRIAL} calls to make" in out and "guessed tokens" in out
     assert "C1 revise     6" in out and "C3 draw       6" in out
-    assert not (tmp_path / "runs" / "dry" / "calls.jsonl").exists()
+    assert not (tmp_path / "runs" / "dry").exists()  # a dry run leaves no folder behind

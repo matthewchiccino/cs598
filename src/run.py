@@ -1,11 +1,12 @@
 """Run experiment conditions and log one JSONL row per API call. Resumable: finished calls are skipped.
 
 Usage:
-  python src/run.py --countries Poland Japan Lesotho Gambia Italy --samples 2
-  python src/run.py --dry-run                     # calls still to make and a rough cost, spend nothing
+  python src/run.py --model claude-sonnet-5-5 --dry-run   # main run: calls still to make and a rough cost
+  python src/run.py --model claude-sonnet-5-5             # main run -> runs/main_claude-sonnet-5-5
+  python src/run.py --run pilot_sonnet --model claude-sonnet-5-5 --countries Poland Japan --samples 1
   python src/run.py --conditions C0 --samples 2   # round 0 (and its judge call) only
   python src/run.py --model claude-opus-5-5 --thinking --countries Italy --samples 1
-The run name defaults to <run_name>_<model>, so each model gets its own log.
+The run name defaults to <run_name>_<model> (main_<model>), so each model gets its own log; pilots pass --run.
 
 Each trial (country x sample) runs in this order: the shared round-0 drawing and its judge call, then
 for every revision condition (C1, C2, C5) rounds 1..R of revise + judge, then C3 rounds 1..R of

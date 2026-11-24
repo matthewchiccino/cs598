@@ -12,6 +12,18 @@ Sources: `DESIGN.md`, `reference/`, the two design chats (Claude, ChatGPT), and 
 
 ---
 
+## D-030 One folder per model and run, named `main_<model>` — settled (refines D-023, D-029)
+- **Default run name:** `main` (`run_name` in `configs/default.yaml`). A full run on Sonnet 5.5 therefore writes to:
+  - `runs/main_claude-sonnet-5-5/`: the call log, config, SVGs, PNGs and gallery;
+  - `analysis/main_claude-sonnet-5-5/`: figures and CSV tables.
+
+  Haiku gets the same layout under `main_claude-haiku-5-5`.
+- **Pilots and tests** pass `--run` with their own name (e.g. `--run pilot_sonnet`), so they never land in a main folder. The existing pilot stays at `runs/pilot_claude-haiku-5-5/`.
+- **No mixing:** a run folder refuses a second model or thinking setting (D-023).
+- **Inside a run, files are not split by condition.** The condition is part of each file name (`poland__C1__s0__r2.svg`) and a column in `calls.jsonl`. The analysis charts compare conditions, so they draw from one log.
+
+Why: keeping each model's data and charts apart prevents mixing them in figures, and the layout stays the one D-029 already describes.
+
 ## D-029 Analysis: intervals, paired gains and judge scoring — confirm (refines D-010, D-019)
 - **Script:** `python src/analysis.py --run <run>` reads `runs/<run>/calls.jsonl` and writes every figure and table to `analysis/<run>/`. Nothing is computed by hand, so a rerun regenerates the report numbers.
 - **Unit of analysis is the country.** The 3 samples of a country are averaged first, then a bootstrap resamples the 24 countries (2,000 resamples, fixed seed) for 95% intervals. Samples of one country share its difficulty, so treating 72 trials as independent would make the intervals too narrow.
