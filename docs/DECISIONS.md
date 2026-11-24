@@ -12,6 +12,31 @@ Sources: `DESIGN.md`, `reference/`, the two design chats (Claude, ChatGPT), and 
 
 ---
 
+## D-034 Main Haiku run, and the two-model comparison — settled (refines D-031, D-033)
+- **Run (Nov 24, 17:15–18:14):** `runs/main_claude-haiku-5-5/`. 1,871 calls for $0.45, all `end_turn`. Every critique and judge rating parsed. One invalid round-0 drawing (Republic of the Congo, sample 0), so its judge call was skipped. **Thinking tokens are 0 on every call**, so Haiku is a clean thinking-off baseline.
+- **Gain at round 3 over round 0 (95% CI over countries):**
+  - **Revisions do nothing:** image + code −0.004 [−0.049, +0.041], code only −0.010 [−0.035, +0.017], with IoU score −0.002 [−0.042, +0.035]. About half of all revisions lower IoU.
+  - **Resampling helps only in principle:** the judge's pick gains +0.014 [−0.003, +0.033], while the best by IoU gains +0.076 [+0.056, +0.096].
+- **Judge:** Spearman 0.07 pooled and −0.03 within country; verdicts are right 43% of the time (chance is 33%).
+- **Against Sonnet:**
+
+  | | Sonnet 5.5 | Haiku 5.5 |
+  |---|---|---|
+  | Round-0 IoU | 0.697 | 0.503 |
+  | Countries beating the disc | 24 of 24 | 12 of 24 |
+  | Calls that thought | about half of fresh drawings | 0 |
+  | Revision gains | negative | about zero |
+  | Best-by-IoU gain | +0.078 | +0.076 |
+  | Judge's pick gain | +0.054, captures about 70% of best-by-IoU | +0.014, captures about 18% |
+  | Judge Spearman, within country | 0.43 | −0.03 |
+  | Cost | $18.78 | $0.45 |
+
+- **Reading:**
+  - **Without thinking, neither model improves its drawing by revising it.** This covers Haiku throughout, and Sonnet's 44 trials whose first drawing didn't think, which stay roughly flat (D-033).
+  - **Fresh samples vary about equally for both models,** so the oracle gains match. What separates them is whether the model can **recognise** its better drawing: Sonnet mostly can, Haiku can't.
+
+Why: this is the two-model result D-031 planned, and it sharpens the story. Self-correction fails at the revising step for both models, and the bigger model's advantage lies in judging, not revising.
+
 ## D-033 Main Sonnet run: results and how thinking shapes them — settled (refines D-031, D-032)
 - **Run (Nov 24, 13:15–17:02):** `runs/main_claude-sonnet-5-5/`. 24 countries × 3 samples, all conditions. It made 1,869 calls for $18.78, under the $20 cap. 1,866 stopped normally (`end_turn`). 3 C2 revisions hit `max_tokens` (16,000) and are invalid; thinking used up their budget. Their judge calls were skipped. 646 of 648 critiques and all 933 judge ratings parsed.
 - **Headline (gain at round 3 over round 0, 95% CI over countries):**

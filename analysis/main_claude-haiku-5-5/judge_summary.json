@@ -1,0 +1,27 @@
+{
+  "judged": 935,
+  "spearman_pooled": 0.07476142629985914,
+  "spearman_within_country_mean": -0.028388226987499432,
+  "countries_within": 24,
+  "verdicts": 645,
+  "verdict_accuracy": 0.4294573643410853,
+  "said_better_share": 0.3395348837209302,
+  "truly_better_share": 0.30077519379844964,
+  "confusion": {
+    "better": {
+      "better": 80,
+      "same": 68,
+      "worse": 46
+    },
+    "same": {
+      "better": 53,
+      "same": 126,
+      "worse": 33
+    },
+    "worse": {
+      "better": 86,
+      "same": 82,
+      "worse": 71
+    }
+  }
+}
