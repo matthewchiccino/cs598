@@ -206,3 +206,29 @@ def test_dry_run_counts_calls_and_estimates_cost(cfg_file, tmp_path, capsys):
     assert f"{2 * FULL_TRIAL} calls to make" in out and "guessed tokens" in out
     assert "C1 revise     6" in out and "C3 draw       6" in out
     assert not (tmp_path / "runs" / "dry").exists()  # a dry run leaves no folder behind
+
+
+def test_thinking_tokens_read_from_usage():
+    from llm import thinking_tokens
+    assert thinking_tokens(SimpleNamespace(output_tokens_details=SimpleNamespace(thinking_tokens=3406))) == 3406
+    assert thinking_tokens(SimpleNamespace(output_tokens_details={"thinking_tokens": 12})) == 12
+    assert thinking_tokens(SimpleNamespace(output_tokens_details={"thinking_tokens": None})) is None
+    assert thinking_tokens(SimpleNamespace(input_tokens=1)) is None  # no breakdown reported
+
+
+class ThinkingClient(FakeClient):
+    """FakeClient whose usage reports thinking tokens, as Sonnet 5.5 does (D-032)."""
+
+    def create(self, **kw):
+        resp = super().create(**kw)
+        resp.usage.output_tokens_details = SimpleNamespace(thinking_tokens=2500)
+        return resp
+
+
+def test_thinking_tokens_are_logged(cfg_file, tmp_path):
+    path, _ = cfg_file
+    one = ["--config", str(path), "--countries", "Poland", "--samples", "1", "--conditions", "C0"]
+    run_module.main(one + ["--run", "th"], client=ThinkingClient())
+    run_module.main(one + ["--run", "no"], client=FakeClient())
+    assert all(r["thinking_tokens"] == 2500 for r in read_log(tmp_path, "th"))  # drawing and judge rows
+    assert all(r["thinking_tokens"] is None for r in read_log(tmp_path, "no"))

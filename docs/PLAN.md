@@ -66,6 +66,7 @@ svg, critique    # null where not applicable
 judge_rating, judge_verdict   # judge calls only
 iou, hausdorff, hd95, valid   # filled by the scorer, never shown to the model except C5
 input_tokens, output_tokens, cost_usd
+thinking_tokens  # part of output_tokens; null when not reported (D-032)
 ```
 
 ## Waiting on the team

@@ -12,6 +12,27 @@ Sources: `DESIGN.md`, `reference/`, the two design chats (Claude, ChatGPT), and 
 
 ---
 
+## D-032 Sonnet 5.5 thinks even with `between_tools`; we keep it and log thinking tokens — settled (refines D-022, D-031)
+- **Finding (Sonnet pilot, Nov 24):** `pilot_sonnet` (3 countries × 1 sample, 78 calls, $0.84) sent `thinking: {type: "between_tools"}` at effort `high`, which the API reference describes as "no extended thinking". A diagnostic repeat of Poland's round-0 call returned an empty `thinking` block, and `usage.output_tokens_details.thinking_tokens` was 3,406 of 3,898 output tokens.
+- **Size:** 9 of 39 Sonnet drawing calls have under 1 reply character per output token, mostly round-0 and C3 draws of Poland and Japan. That signature means hidden thinking. Haiku 5.5 (`disabled`) shows none in 130 calls.
+- **Consequences:**
+  - Sonnet's thinking is uneven across conditions. Fresh draws think more than revisions, which biases the drawings revisions start from against the revisions themselves.
+  - Sonnet's full-run cost projects to about $20, above the cap.
+  - The log doesn't record thinking tokens: `scored_row` keeps text blocks and total output tokens only.
+- **Options:**
+  1. Test whether a lower effort with `between_tools` stops the thinking.
+  2. Run Sonnet with adaptive thinking on purpose, log thinking tokens, and compare it with Haiku `--thinking` (D-023).
+  3. Keep Haiku as the main thinking-off model and make Sonnet an extension.
+- **Either way:** log `thinking_tokens` per call before any main run.
+- **Decision (Nov 24):** keep Sonnet at `between_tools` and effort `high`, as in the pilot. The team handles the cost question separately (the $20 cap may need raising).
+- **Logging:** every row now has `thinking_tokens` from `usage.output_tokens_details`. It is part of `output_tokens`, and null when the API sends no breakdown. Haiku 5.5 reports 0, checked with one real call. The two pilot logs predate the field.
+- **Analysis use:**
+  - share of calls that thought, per condition and round;
+  - revision gains recomputed on calls that did not think, so the confound is measured;
+  - IoU of drawings that came after thinking against those that did not.
+
+  The reasoning text is not available: with `between_tools` the `thinking` block is empty, and the API rejects a `display` field.
+
 ## D-031 Main run on Sonnet 5.5, Haiku 5.5 as a second model — settled (resolves D-015's model choice)
 - **Main run:** `claude-sonnet-5-5`, thinking off (`between_tools`, D-022), the default in `configs/default.yaml`. `python src/run.py` writes `runs/main_claude-sonnet-5-5/`.
 - **Second model:** `python src/run.py --model claude-haiku-5-5` writes `runs/main_claude-haiku-5-5/`. Both models run thinking-off with the same frozen prompts (`prompts-v1`), so "does a bigger model self-correct better?" is a fair comparison.

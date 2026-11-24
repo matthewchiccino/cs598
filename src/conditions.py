@@ -34,6 +34,7 @@ def reply_row(row: dict, reply, prompt_id: str, prompt: str) -> dict:
             "judge_rating": None, "judge_verdict": None,
             "valid": None, "iou": None, "hausdorff": None, "hd95": None,
             "input_tokens": reply.input_tokens, "output_tokens": reply.output_tokens,
+            "thinking_tokens": reply.thinking_tokens,
             "cost_usd": reply.cost_usd, "request_id": reply.request_id}
 
 

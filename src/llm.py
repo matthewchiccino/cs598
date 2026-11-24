@@ -71,6 +71,15 @@ def image_block(png: Path) -> dict:
     return {"type": "image", "source": {"type": "base64", "media_type": "image/png", "data": data}}
 
 
+def thinking_tokens(usage) -> int | None:
+    """Thinking tokens billed inside output_tokens (D-032), or None if the response has no breakdown."""
+    details = getattr(usage, "output_tokens_details", None)
+    if details is None:
+        return None
+    value = details.get("thinking_tokens") if isinstance(details, dict) else getattr(details, "thinking_tokens", None)
+    return int(value) if value is not None else None
+
+
 def to_content(parts):
     """A string as is; a list of parts as content blocks: str -> text, Path -> PNG image, dict as given."""
     if isinstance(parts, str):
@@ -94,6 +103,7 @@ class Reply:
     output_tokens: int
     cost_usd: float
     request_id: str | None
+    thinking_tokens: int | None = None   # part of output_tokens; None when the API does not report it
 
 
 class LLM:
@@ -128,4 +138,4 @@ class LLM:
         budget.add(usd)
         text = "".join(b.text for b in resp.content if b.type == "text")
         return Reply(text, resp.stop_reason, usage.input_tokens, usage.output_tokens, usd,
-                     getattr(resp, "_request_id", None))
+                     getattr(resp, "_request_id", None), thinking_tokens(usage))
