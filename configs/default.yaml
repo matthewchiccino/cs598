@@ -3,7 +3,7 @@
 run_name: main                 # runs/<run_name>_<model>, analysis/<run_name>_<model> (D-030)
 
 model:                        # D-015
-  name: claude-haiku-5-5      # final runs: claude-sonnet-5-5
+  name: claude-sonnet-5-5     # main run (D-031); second model: --model claude-haiku-5-5
   thinking: false             # haiku: {type: disabled}; sonnet 5.5: {type: between_tools} (D-022)
   effort: high                # set explicitly; the default differs by model (D-022)
   max_tokens: 16000

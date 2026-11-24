@@ -49,6 +49,7 @@ class FakeClient:
 def cfg_file(tmp_path, monkeypatch):
     cfg = yaml.safe_load((ROOT / "configs" / "default.yaml").read_text(encoding="utf-8"))
     cfg["runs_dir"] = str(tmp_path / "runs")
+    cfg["model"]["name"] = "claude-haiku-5-5"  # the costs and budget caps below are worked out on Haiku prices
     path = tmp_path / "cfg.yaml"
     path.write_text(yaml.safe_dump(cfg), encoding="utf-8")
     monkeypatch.setattr(run_module, "ROOT", tmp_path)

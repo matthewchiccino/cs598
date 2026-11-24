@@ -12,6 +12,15 @@ Sources: `DESIGN.md`, `reference/`, the two design chats (Claude, ChatGPT), and 
 
 ---
 
+## D-031 Main run on Sonnet 5.5, Haiku 5.5 as a second model — settled (resolves D-015's model choice)
+- **Main run:** `claude-sonnet-5-5`, thinking off (`between_tools`, D-022), the default in `configs/default.yaml`. `python src/run.py` writes `runs/main_claude-sonnet-5-5/`.
+- **Second model:** `python src/run.py --model claude-haiku-5-5` writes `runs/main_claude-haiku-5-5/`. Both models run thinking-off with the same frozen prompts (`prompts-v1`), so "does a bigger model self-correct better?" is a fair comparison.
+- **Before the full run:** a Sonnet pilot (`--run pilot_sonnet`, 2–5 countries × 1 sample). It checks that `between_tools` keeps thinking off on the real API, measures Sonnet's tokens for the cost estimate, and checks that its replies parse.
+- **Cost:** at the Haiku pilot's token counts, Sonnet is about $9 and Haiku about $0.50 for the full run. The $20 cap stays.
+- **Shared data:** each main run's `calls.jsonl` and `config.json` are tracked in git (`.gitignore` exception). SVGs, PNGs and the gallery stay local because they regenerate from the log. Pilots stay local.
+
+Why: Haiku's round-0 drawings fell below the disc floor for 4 of 5 pilot countries, so a stronger model makes the test of self-correction fairer. Running Haiku as well costs little and adds a model-size comparison.
+
 ## D-030 One folder per model and run, named `main_<model>` — settled (refines D-023, D-029)
 - **Default run name:** `main` (`run_name` in `configs/default.yaml`). A full run on Sonnet 5.5 therefore writes to:
   - `runs/main_claude-sonnet-5-5/`: the call log, config, SVGs, PNGs and gallery;
@@ -105,7 +114,7 @@ Why: one shared frame keeps the conditions differing only in the feedback block.
   - It's **required for `claude-opus-5-5`**, which rejects every way of turning thinking off. Without the flag the runner stops and explains why.
   - Thinking tokens are billed as output, so Opus runs cost more than the per-call estimates in D-015.
 - **Why it matters:** the initial demo (Matthew's) compared Haiku and Opus. Thinking-on and thinking-off runs are not comparable, because thinking is a form of hidden self-revision.
-  - The main experiment stays thinking-off on Haiku 5.5 (D-015).
+  - The main experiment runs thinking-off on Sonnet 5.5, with Haiku 5.5 as a second thinking-off model (D-031).
   - A Haiku vs Opus comparison runs **both** models with `--thinking`, and is reported separately as a model-comparison extension.
 - **Prices known to the runner:** Haiku 5.5, Sonnet 5.5 and Opus 5.5. Any other model ID is refused until its price is added to `PRICES` in `src/llm.py`.
 
